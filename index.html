@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dental Patient Records Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="header-title">🦷 Dental Patient Records</h1>
+                <div class="header-actions">
+                    <button class="btn btn--outline btn--sm" onclick="exportAllData()">Export All Data</button>
+                    <button class="btn btn--outline btn--sm" onclick="importData()">Import Data</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+                </div>
+            </div>
+        </header>
+
+        <!-- Patient List View -->
+        <div id="patientListView" class="main-view">
+            <div class="view-header">
+                <h2>Patient Records</h2>
+                <div class="search-controls">
+                    <input type="text" class="form-control" id="searchPatient" placeholder="Search patients..." onkeyup="filterPatients()">
+                    <button class="btn btn--primary" onclick="showAddPatientForm()">+ Add New Patient</button>
+                </div>
+            </div>
+            
+            <div class="patients-grid" id="patientsGrid">
+                <!-- Patient cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- Patient Form View -->
+        <div id="patientFormView" class="main-view hidden">
+            <div class="form-header">
+                <h2 id="formTitle">Add New Patient</h2>
+                <div class="form-actions">
+                    <button class="btn btn--outline" onclick="showPatientList()">← Back to List</button>
+                    <button class="btn btn--secondary" onclick="printPatientRecord()" id="printBtn" style="display: none;">Print Record</button>
+                </div>
+            </div>
+
+            <form id="patientForm" class="patient-form">
+                <!-- Demographics Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Patient Demographics</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Patient ID</label>
+                            <input type="text" class="form-control" id="patientId" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Patient Name *</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Age *</label>
+                            <input type="number" class="form-control" id="age" min="1" max="120" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Sex *</label>
+                            <select class="form-control" id="sex" required>
+                                <option value="">Select...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Occupation</label>
+                            <input type="text" class="form-control" id="occupation">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" id="address" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- Chief Complaint Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Chief Complaint & History</h3>
+                    <div class="form-group">
+                        <label class="form-label">Chief Complaint</label>
+                        <textarea class="form-control" id="complaint" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">History of Present Illness</label>
+                        <textarea class="form-control" id="hopi" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Pain Intensity</label>
+                            <select class="form-control" id="intensity">
+                                <option value="">Select...</option>
+                                <option value="mild">Mild</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="severe">Severe</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Pain Nature</label>
+                            <select class="form-control" id="nature">
+                                <option value="">Select...</option>
+                                <option value="throbbing">Throbbing</option>
+                                <option value="pricking">Pricking</option>
+                                <option value="radiating">Radiating</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Aggravating Factors</label>
+                            <input type="text" class="form-control" id="aggravating">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Relief Factors</label>
+                            <input type="text" class="form-control" id="relief">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical History Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Medical History (PMH)</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hypertension">
+                            <label for="hypertension">Hypertension</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="diabetes">
+                            <label for="diabetes">Diabetes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="thyroid">
+                            <label for="thyroid">Thyroid</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Other Medical Conditions</label>
+                        <textarea class="form-control" id="medicalOthers" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- Dental History Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Dental History (POH)</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="prevExtractions">
+                            <label for="prevExtractions">Previous Extractions</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="prevRestorations">
+                            <label for="prevRestorations">Previous Restorations</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="prevRCT">
+                            <label for="prevRCT">Previous RCT</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="prevOrtho">
+                            <label for="prevOrtho">Previous Orthodontic Treatment</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="prevProsth">
+                            <label for="prevProsth">Previous Prosthetic Treatment</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Other Dental History</label>
+                        <textarea class="form-control" id="dentalOthers" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- Clinical Examination Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Clinical Examination (OIE)</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="impaction">
+                            <label for="impaction">Impaction</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="opc">
+                            <label for="opc">OPC</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="abscess">
+                            <label for="abscess">Abscess</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="rctNeeded">
+                            <label for="rctNeeded">RCT Needed</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="crownNeeded">
+                            <label for="crownNeeded">Crown Needed</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="mobility">
+                            <label for="mobility">Tooth Mobility</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cervicalDentin">
+                            <label for="cervicalDentin">Cervical Dentin</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="gingivalRecession">
+                            <label for="gingivalRecession">Gingival Recession</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Affected Tooth Numbers</label>
+                        <input type="text" class="form-control" id="toothNumbers" placeholder="e.g., 16, 17, 21">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Other Clinical Findings</label>
+                        <textarea class="form-control" id="clinicalOthers" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- Dental Chart Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Interactive Dental Chart</h3>
+                    <div class="dental-chart">
+                        <div class="chart-legend">
+                            <div class="legend-item"><span class="legend-color healthy"></span>Healthy</div>
+                            <div class="legend-item"><span class="legend-color decay"></span>Decay</div>
+                            <div class="legend-item"><span class="legend-color filled"></span>Filled</div>
+                            <div class="legend-item"><span class="legend-color crown"></span>Crown</div>
+                            <div class="legend-item"><span class="legend-color extracted"></span>Extracted</div>
+                            <div class="legend-item"><span class="legend-color rct"></span>RCT</div>
+                            <div class="legend-item"><span class="legend-color impacted"></span>Impacted</div>
+                        </div>
+                        <div class="teeth-container">
+                            <div class="upper-jaw">
+                                <div class="jaw-label">Upper Jaw</div>
+                                <div class="teeth-row" id="upperTeeth"></div>
+                            </div>
+                            <div class="lower-jaw">
+                                <div class="jaw-label">Lower Jaw</div>
+                                <div class="teeth-row" id="lowerTeeth"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Treatment Plan Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Treatment Plan</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="gic">
+                            <label for="gic">GIC Restoration</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="composite">
+                            <label for="composite">Composite Filling</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="treatmentCrown">
+                            <label for="treatmentCrown">Crown</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="extraction">
+                            <label for="extraction">Extraction</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="xray">
+                            <label for="xray">X-ray</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="treatmentRCT">
+                            <label for="treatmentRCT">Root Canal Treatment</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="treatmentOrtho">
+                            <label for="treatmentOrtho">Orthodontic Treatment</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Other Treatments</label>
+                        <textarea class="form-control" id="treatmentOthers" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- Prescription Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Prescription</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="amoxClav">
+                            <label for="amoxClav">Amoxicillin-Clavulanate</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="paracetamol">
+                            <label for="paracetamol">Paracetamol</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="zerodolP">
+                            <label for="zerodolP">Zerodol-P</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hifinac">
+                            <label for="hifinac">Hifinac</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="flagyl">
+                            <label for="flagyl">Flagyl</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="pan">
+                            <label for="pan">Pan</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Other Medications</label>
+                        <textarea class="form-control" id="prescriptionOthers" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- Payment Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Payment Details</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Amount Paid</label>
+                            <input type="number" class="form-control" id="paid" min="0" step="0.01" onchange="calculatePending()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Total Payment</label>
+                            <input type="number" class="form-control" id="total" min="0" step="0.01" onchange="calculatePending()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Amount Pending</label>
+                            <input type="number" class="form-control" id="pending" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-control" id="paymentMethod">
+                            <option value="">Select...</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Visit Information Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Visit Information</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="homeVisit">
+                            <label for="homeVisit">Home Visit</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="newPatient">
+                            <label for="newPatient">New Patient</label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Appointment Date</label>
+                            <input type="datetime-local" class="form-control" id="appointment">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Consultant</label>
+                            <input type="text" class="form-control" id="consultant">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Additional Expenses</label>
+                        <input type="number" class="form-control" id="expenses" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions-bottom">
+                    <button type="button" class="btn btn--outline" onclick="clearForm()">Clear Form</button>
+                    <button type="button" class="btn btn--secondary" onclick="exportPatientData()" id="exportBtn" style="display: none;">Export Patient</button>
+                    <button type="submit" class="btn btn--primary" id="saveBtn">Save Patient Record</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Print View -->
+        <div id="printView" class="print-view hidden">
+            <!-- Print content will be populated here -->
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast" class="toast hidden">
+        <span id="toastMessage"></span>
+        <button onclick="hideToast()" class="toast-close">×</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
